@@ -1,0 +1,16 @@
+name: eng-training-20250822-team3
+id: ari:cloud:compass:f19c88ab-0246-42ef-bcbf-285c6e51ec78:component/ef3e05d3-c9f7-44f8-a64b-4d1c79dc7c92/572f5d43-a77c-4fd7-80e0-a0f58ea6c5bc
+description: Engineering training repository
+configVersion: 1
+typeId: SERVICE
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/loanpal-engineering/eng-training-20250822-team3
+relationships:
+  DEPENDS_ON: []
+labels:
+  - source:github
+customFields: null
