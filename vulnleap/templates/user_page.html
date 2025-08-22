@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Vulnleap - {{ session['username'] }}{% endblock %}
+{% block content %}
+    <h1>Settings for {{ session['username'] }}</h1>
+    {% if quotes %}
+        <h2>Quotes</h2>
+        <ul>
+            {% for quote in quotes %}
+                <li><a href="/quote/{{ quote.id }}">Quote #{{ quote.id }}</a></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <div class="mt-5">
+        <form action="/user" method="post">
+            <div class="mb-3">
+                <label for="password" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="password" name="password">
+                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+            </div>
+            <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+    </div>
+{% endblock %}

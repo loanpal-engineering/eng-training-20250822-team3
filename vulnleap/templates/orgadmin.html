@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Org Admin{% endblock %}
+{% block content %}
+    <h1>Org Admin</h1>
+    <h2>Org Level Settings</h2>
+    <h3>Loan Payment Destination Bank Account <span class="text-danger">**WARNING** DO NOT CHANGE WITHOUT PERMISSION</span></h3>
+    <form action="/orgadmin" method="post">
+        <div class="mb-3">                
+            <input type="hidden" class="form-control" id="setting_key" name="setting_key" value="loan_payment_destination_bank_account">
+        </div>
+        <div class="mb-3">
+            <label for="setting_value" class="form-label">Destination Bank Account</label>
+            <input type="text" class="form-control" id="setting_value" name="setting_value" value="{{ org_settings[0].setting_value }}">
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Update</button>
+        </div>
+    </form>
+{% endblock %}

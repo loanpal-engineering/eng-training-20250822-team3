@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+    <h1>Admin</h1>
+    <h2>Users List</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user_roles[user.id] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="container mt-5">
+        <h2>Quotes List</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Quote ID</th>
+                    <th>User ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quote in quotes %}
+                    <tr>
+                        <td><a href="/quote/{{ quote.id }}">{{ quote.id }}</a></td>
+                        <td>{{ quote_users[quote.id] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

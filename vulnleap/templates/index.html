@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Vulnleap Mortgage{% endblock %}
+{% block content %}
+    <div class="text-center mb-5">
+        <img src="{{ url_for('static', filename='vulnleap-logo.png') }}" alt="Vulnleap Logo" height="80" class="mb-3">
+        <p class="lead">Mortgages are for everyone. Security is for chumps.</p>
+        <a href="/quote" class="btn btn-success btn-lg mt-3">Get a Mortgage Quote</a>
+    </div>
+    <div class="text-center mb-5">
+        <h2 class="display-7">Why Pay For What You Don't Need?</h2>
+        <p class="lead">Here at Vulnleap, we offer rates better than the competition. While our competition spends millions on security, we don't waste money on things we don't need, and you, the customer, reap the savings.</p>
+    </div>
+    {% if 'user_id' not in session or session['user_id'] is none %}
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-info">
+                <div class="card-body d-flex flex-column h-100">
+                    <h5 class="card-title">New Here?</h5>
+                    <p class="card-text">Get a mortgage quote instantly. To save your quote, create an account.</p>
+                    <a href="/quote" class="btn btn-outline-info mt-auto w-auto mx-auto">Get Quote</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-primary">
+                <div class="card-body d-flex flex-column h-100">
+                    <h5 class="card-title">Existing Customers</h5>
+                    <p class="card-text">Save quotes, manage your mortgage applications, and track your payments.</p>
+                    <div class="d-flex align-items-center gap-2 mt-auto justify-content-center mx-auto">
+                        <a href="/register" class="btn btn-outline-primary">Sign Up</a>
+                        <span>or</span>
+                        <a href="/login" class="btn btn-outline-primary">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Vulnleap - {{ quote.id }}{% endblock %}
+{% block content %}
+    <h1>Quote {{ quote.id }}</h1>
+    <p>Status: {{ quote.status }}</p>
+    <p>Loan Amount: {{ quote.loan_amount }}</p>
+    <p>Home Cost: {{ quote.property_value }}</p>
+    <p>Down Payment: {{ quote.down_payment }}</p>
+    <p>Credit Score: {{ quote.credit_score }}</p>
+    <p>SSN Number: {{ quote.ssn_number }}</p>
+    <p>Loan Term: {{ quote.term_years }}</p>
+    <p>Quote Amount: {{ quote.loan_amount }}</p>
+    <p>Monthly Payment: {{ quote.monthly_payment }}</p>
+    <p>Total Interest Paid: {{ quote.total_interest }}</p>
+    <p>Interest Rate: {{ quote.interest_rate }}</p>
+    <p>Total Cost: {{ quote.loan_amount + quote.total_interest }}</p>
+{% endblock %}
