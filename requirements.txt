@@ -6,3 +6,4 @@ Flask-SQLAlchemy>=3.0
 pymysql
 requests
 psutil
+Flask-WTF

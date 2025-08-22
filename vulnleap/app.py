@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 from .models import db
 import uuid
 
@@ -22,10 +23,46 @@ def create_app():
             }
         }
     
-    # Generate a random secret key for session management
-    app.config['SECRET_KEY'] = str(uuid.uuid4())
+    # Use a secure, persistent secret key from environment variable
+    secret_key = os.getenv('SECRET_KEY')
+    if not secret_key:
+        # Generate a cryptographically secure secret key if not provided
+        import secrets
+        secret_key = secrets.token_hex(32)
+        print("WARNING: No SECRET_KEY environment variable set. Using generated key:", secret_key)
+        print("Please set SECRET_KEY environment variable with this value for production")
+    app.config['SECRET_KEY'] = secret_key
+
+    # Enable CSRF protection
+    csrf = CSRFProtect()
+    csrf.init_app(app)
 
     db.init_app(app)
+
+    # Add security headers
+    @app.after_request
+    def add_security_headers(response):
+        # Content Security Policy
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' https://cdn.jsdelivr.net; "
+            "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none'"
+        )
+        # Prevent clickjacking
+        response.headers['X-Frame-Options'] = 'DENY'
+        # Prevent MIME type sniffing
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        # Enable XSS protection
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        # Referrer Policy
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        # Force HTTPS (comment out if not using HTTPS)
+        # response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        return response
 
     from .routes import main
     app.register_blueprint(main)

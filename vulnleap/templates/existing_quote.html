@@ -7,7 +7,7 @@
     <p>Home Cost: {{ quote.property_value }}</p>
     <p>Down Payment: {{ quote.down_payment }}</p>
     <p>Credit Score: {{ quote.credit_score }}</p>
-    <p>SSN Number: {{ quote.ssn_number }}</p>
+    <p>SSN Number: XXX-XX-{{ quote.ssn_number[-4:] if quote.ssn_number and quote.ssn_number|length >= 4 else 'XXXX' }}</p>
     <p>Loan Term: {{ quote.term_years }}</p>
     <p>Quote Amount: {{ quote.loan_amount }}</p>
     <p>Monthly Payment: {{ quote.monthly_payment }}</p>
