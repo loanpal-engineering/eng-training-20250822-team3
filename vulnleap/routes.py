@@ -5,6 +5,7 @@ import bcrypt
 import random
 import uuid
 import re
+from datetime import datetime, timedelta
 
 main = Blueprint('main', __name__)
 
@@ -36,6 +37,58 @@ def safe_float(val):
         return float(val)
     except Exception:
         return None
+
+def validate_session():
+    """Validate user session against database and check expiration"""
+    if 'user_id' not in session or 'session_token' not in session:
+        return None
+    
+    # Check if session exists in database and is not expired
+    db_session = Session.query.filter_by(
+        user_id=session['user_id'], 
+        session_token=session['session_token']
+    ).first()
+    
+    if not db_session:
+        # Session not found in database, clear session
+        session.clear()
+        return None
+    
+    # Check if session is older than 24 hours
+    if db_session.created_at < datetime.utcnow() - timedelta(hours=24):
+        # Session expired, remove from database and clear session
+        db.session.delete(db_session)
+        db.session.commit()
+        session.clear()
+        return None
+    
+    # Get user from database
+    user = User.query.get(session['user_id'])
+    if not user:
+        # User not found, clear session
+        session.clear()
+        return None
+    
+    return user
+
+def validate_password(password):
+    """Validate password strength"""
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+    
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter"
+    
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter"
+    
+    if not re.search(r'[0-9]', password):
+        return False, "Password must contain at least one digit"
+    
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return False, "Password must contain at least one special character"
+    
+    return True, "Password is valid"
 
 @main.route('/')
 def index():
@@ -133,6 +186,12 @@ def register():
             flash("Passwords do not match.", "danger")
             return render_template('register.html', username=username)
         
+        # Validate password strength
+        is_valid, message = validate_password(password)
+        if not is_valid:
+            flash(message, "danger")
+            return render_template('register.html', username=username)
+        
         # Hash the password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
@@ -196,20 +255,27 @@ def login():
 
 @main.route('/logout')
 def logout():
-    session.pop('user_id', None)
-    session.pop('session_token', None)
+    # Clean up database session if exists
+    if 'user_id' in session and 'session_token' in session:
+        db_session = Session.query.filter_by(
+            user_id=session['user_id'], 
+            session_token=session['session_token']
+        ).first()
+        if db_session:
+            db.session.delete(db_session)
+            db.session.commit()
+    
+    # Clear Flask session
+    session.clear()
+    flash("You have been logged out successfully.", "info")
     return redirect(url_for('main.index'))
 
 @main.route('/user', methods=['GET', 'POST'])
 def user():
     if request.method == 'POST':
-        if 'user_id' not in session or session['user_id'] is None:
-            flash("You must be logged in to access this page.", "danger")
-            return redirect(url_for('main.login'))
-        
-        user = User.query.get(session['user_id'])
+        user = validate_session()
         if not user:
-            flash("User not found.", "danger")
+            flash("You must be logged in to access this page.", "danger")
             return redirect(url_for('main.login'))
         
         if "password" in request.form:
@@ -218,6 +284,13 @@ def user():
             if password != confirm_password:
                 flash("Passwords do not match.", "danger")
                 return redirect(url_for('main.user'))
+            
+            # Validate password strength
+            is_valid, message = validate_password(password)
+            if not is_valid:
+                flash(message, "danger")
+                return redirect(url_for('main.user'))
+            
             user.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             db.session.commit()
             flash("Password changed successfully.", "success")
@@ -227,18 +300,21 @@ def user():
 
 @main.route('/quote/<int:quote_id>')
 def quote_page(quote_id):
-    if 'user_id' not in session or session['user_id'] is None:
+    user = validate_session()
+    if not user:
         flash("You must be logged in to access this page.", "danger")
         return redirect(url_for('main.login'))
-    
-    user = User.query.get(session['user_id'])
-    if not user:
-        flash("User not found.", "danger")
 
     quote = MortgageQuote.query.get(quote_id)
     if not quote:
         flash("Quote not found.", "danger")
         return redirect(url_for('main.user'))
+    
+    # SECURITY FIX: Check if user owns this quote or is admin
+    if quote.user_id != user.id and user.user_type not in ['admin', 'superadmin']:
+        flash("You do not have permission to view this quote.", "danger")
+        return redirect(url_for('main.user'))
+    
     return render_template('existing_quote.html', quote=quote)
 
 @main.route('/admin')
