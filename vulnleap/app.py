@@ -1,8 +1,15 @@
 import os
 from flask import Flask
-from flask_wtf.csrf import CSRFProtect
 from .models import db
 import uuid
+
+# Try to import CSRF protection, but make it optional
+try:
+    from flask_wtf.csrf import CSRFProtect
+    CSRF_AVAILABLE = True
+except ImportError:
+    CSRF_AVAILABLE = False
+    print("WARNING: Flask-WTF not available. CSRF protection disabled.")
 
 def create_app():
     app = Flask(__name__)
@@ -33,22 +40,37 @@ def create_app():
         print("Please set SECRET_KEY environment variable with this value for production")
     app.config['SECRET_KEY'] = secret_key
 
-    # Enable CSRF protection
-    csrf = CSRFProtect()
-    csrf.init_app(app)
+    # Enable CSRF protection if available
+    if CSRF_AVAILABLE:
+        csrf = CSRFProtect()
+        csrf.init_app(app)
+        print("CSRF protection enabled")
+    else:
+        print("CSRF protection disabled - Flask-WTF not available")
 
     db.init_app(app)
+
+    # Add template helper for conditional CSRF tokens
+    @app.template_global()
+    def csrf_token():
+        if CSRF_AVAILABLE:
+            try:
+                from flask_wtf.csrf import generate_csrf
+                return generate_csrf()
+            except:
+                return ""
+        return ""
 
     # Add security headers
     @app.after_request
     def add_security_headers(response):
-        # Content Security Policy
+        # Content Security Policy - relaxed for compatibility
         response.headers['Content-Security-Policy'] = (
-            "default-src 'self'; "
-            "script-src 'self' https://cdn.jsdelivr.net; "
-            "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-            "img-src 'self' data:; "
-            "font-src 'self' https://cdn.jsdelivr.net; "
+            "default-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' https://cdn.jsdelivr.net data:; "
             "connect-src 'self'; "
             "frame-ancestors 'none'"
         )
