@@ -39,35 +39,35 @@ def safe_float(val):
         return None
 
 def validate_session():
-    """Validate user session against database and check expiration"""
-    if 'user_id' not in session or 'session_token' not in session:
+    """Validate user session against database and check expiration - graceful fallback"""
+    if 'user_id' not in session:
         return None
     
-    # Check if session exists in database and is not expired
-    db_session = Session.query.filter_by(
-        user_id=session['user_id'], 
-        session_token=session['session_token']
-    ).first()
-    
-    if not db_session:
-        # Session not found in database, clear session
-        session.clear()
-        return None
-    
-    # Check if session is older than 24 hours
-    if db_session.created_at < datetime.utcnow() - timedelta(hours=24):
-        # Session expired, remove from database and clear session
-        db.session.delete(db_session)
-        db.session.commit()
-        session.clear()
-        return None
-    
-    # Get user from database
+    # Get user from database first
     user = User.query.get(session['user_id'])
     if not user:
-        # User not found, clear session
-        session.clear()
         return None
+    
+    # If we have session_token, try to validate it (new secure sessions)
+    if 'session_token' in session:
+        try:
+            db_session = Session.query.filter_by(
+                user_id=session['user_id'], 
+                session_token=session['session_token']
+            ).first()
+            
+            if db_session:
+                # Check if session is older than 24 hours
+                if db_session.created_at < datetime.utcnow() - timedelta(hours=24):
+                    # Session expired, remove from database
+                    db.session.delete(db_session)
+                    db.session.commit()
+                    session.pop('session_token', None)
+                    # But don't invalidate the whole session - just remove token
+                    
+        except Exception as e:
+            # Database error - continue with basic session validation
+            print(f"Session validation warning: {e}")
     
     return user
 

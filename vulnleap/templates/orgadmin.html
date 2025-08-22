@@ -5,7 +5,7 @@
     <h2>Org Level Settings</h2>
     <h3>Loan Payment Destination Bank Account <span class="text-danger">**WARNING** DO NOT CHANGE WITHOUT PERMISSION</span></h3>
     <form action="/orgadmin" method="post">
-        {{ csrf_token() }}
+        {% if csrf_token() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>{% endif %}
         <div class="mb-3">                
             <input type="hidden" class="form-control" id="setting_key" name="setting_key" value="loan_payment_destination_bank_account">
         </div>
